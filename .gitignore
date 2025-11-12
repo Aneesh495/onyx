@@ -1,0 +1,45 @@
+# Build outputs
+build/
+bin/
+lib/
+*.o
+*.obj
+*.so
+*.dylib
+*.a
+*.dSYM/
+*.ptx
+*.cubin
+*.fatbin
+
+# CMake artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile.cmake
+CTestTestfile.cmake
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# IDE and tooling
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test outputs and logs
+test_results/
+*.log
+*.profdata
+*.profraw
