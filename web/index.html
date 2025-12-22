@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onyx GPU Columnar Query & Streaming Kernel</title>
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo-gem"></div>
+      <div>
+        <div class="title">ONYX</div>
+        <div class="subtitle">GPU-Accelerated Columnar Kernel</div>
+      </div>
+    </div>
+    <div class="status-badge">
+      <div class="dot"></div>
+      <span id="stat-engine-mode">Hardware Accelerating</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left Column: Tables & Schema Explorer -->
+    <section class="panel">
+      <div class="panel-title">
+        <span>Catalog Tables</span>
+        <span style="font-size:0.75rem;">In-Memory</span>
+      </div>
+      <div class="table-list" id="table-list-container">
+        <!-- Injected dynamically -->
+        <div class="table-card">
+          <div class="table-name">telemetry</div>
+          <div class="table-meta">100,000 rows | 25 chunks</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Center Column: Query Console & Results -->
+    <section class="panel" style="flex: 2;">
+      <div class="panel-title">SQL Query Console</div>
+      <div class="editor-container">
+        <textarea id="query-input" spellcheck="false">SELECT count(*) FROM telemetry WHERE latency_us > 1000;</textarea>
+        <div class="btn-row">
+          <button class="run-btn" id="run-btn">Execute on GPU</button>
+        </div>
+      </div>
+
+      <div class="panel-title">Execution Plan Graph (DAG)</div>
+      <div class="dag-canvas" id="dag-container"></div>
+
+      <div class="panel-title">Query Results</div>
+      <div class="results-view" id="results-output">Ready. Execute a query above to dispatch to GPU streams.</div>
+    </section>
+
+    <!-- Right Column: Live Telemetry & GPU Memory Gauges -->
+    <section class="panel">
+      <div class="panel-title">Engine Telemetry</div>
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-val" id="stat-latency">0.00 ms</div>
+          <div class="metric-label">End-to-End Latency</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="stat-kernel-time">0.0 us</div>
+          <div class="metric-label">Pure Kernel Time</div>
+        </div>
+      </div>
+
+      <div class="panel-title">GPU Memory Pool</div>
+      <div class="metric-card">
+        <div class="metric-label" id="mem-usage-label">0 MB / 256 MB</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="mem-bar"></div>
+        </div>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-val" id="stat-allocs">0</div>
+          <div class="metric-label">Total Allocations</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" id="stat-frag">0.0%</div>
+          <div class="metric-label">Pool Fragmentation</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
