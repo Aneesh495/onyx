@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "onyx-gpu"
+version = "0.1.0"
+description = "Python client SDK for the Onyx GPU Columnar Query Engine"
+authors = [{ name = "Aneesh Krishna Parthasarathy" }]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
