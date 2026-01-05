@@ -1,3 +1,4 @@
+#include "test_framework.hpp"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -17,27 +18,6 @@ static std::vector<TestCase>& get_registry() {
 void register_test(std::string name, std::function<void()> func) {
     get_registry().push_back(TestCase{std::move(name), std::move(func)});
 }
-
-#define ONYX_TEST(name) \
-    static void test_##name(); \
-    static int dummy_##name = (register_test(#name, test_##name), 0); \
-    static void test_##name()
-
-#define ONYX_ASSERT(cond) \
-    do { \
-        if (!(cond)) { \
-            std::cerr << "Assertion failed: " << #cond << " at " << __FILE__ << ":" << __LINE__ << "\n"; \
-            throw std::runtime_error("Assertion failed: " #cond); \
-        } \
-    } while (0)
-
-#define ONYX_ASSERT_EQ(a, b) \
-    do { \
-        if ((a) != (b)) { \
-            std::cerr << "Assertion failed: " << #a << " == " << #b << " (" << (a) << " != " << (b) << ") at " << __FILE__ << ":" << __LINE__ << "\n"; \
-            throw std::runtime_error("Assertion failed: " #a " == " #b); \
-        } \
-    } while (0)
 
 int main() {
     auto& tests = get_registry();
