@@ -150,6 +150,7 @@ file(GLOB_RECURSE ONYX_TEST_SOURCES tests/*.cpp)
 add_executable(onyx-tests
     ${ONYX_TEST_SOURCES}
 )
+target_include_directories(onyx-tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 target_link_libraries(onyx-tests PRIVATE onyx_core)
 
 # Benchmark Suite Binary
