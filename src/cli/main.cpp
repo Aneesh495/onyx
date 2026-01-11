@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg == "--exec" && i + 1 < argc) {
+        if ((arg == "--exec" || arg == "-e") && i + 1 < argc) {
             repl.execute_single_query(argv[++i]);
             return 0;
         } else if (arg == "--load" && i + 2 < argc) {
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
             repl.load_csv_file(path, tbl);
         } else if (arg == "--help" || arg == "-h") {
             std::cout << "Usage: onyx-cli [OPTIONS]\n"
-                      << "  --exec <query>       Execute single query and exit\n"
+                      << "  -e, --exec <query>   Execute single query and exit\n"
                       << "  --load <file> <tbl>  Load CSV file before starting\n"
                       << "  --help               Display this help message\n";
             return 0;
