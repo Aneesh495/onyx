@@ -15,6 +15,7 @@ void launch_radix_sort(
 {
     if (num_elements <= 1) return;
 
+#if defined(ONYX_HAS_CUDA) && ONYX_HAS_CUDA == 1
     uint32_t num_blocks = std::min<uint32_t>((num_elements + 255) / 256, 32);
     size_t hist_size = RADIX_BINS * num_blocks;
 
@@ -35,16 +36,6 @@ void launch_radix_sort(
         // Step 1: Compute histograms
         std::fill(block_histograms.begin(), block_histograms.end(), 0);
 
-#if defined(ONYX_HAS_CUDA) && ONYX_HAS_CUDA == 1
-        // Launch native CUDA kernel
-#else
-        cuda::SimtEngine::instance().launch(
-            cuda::Dim3(num_blocks), cuda::Dim3(256), 0,
-            [&]() {
-                radix_sort_histogram<KeyType>(in_k, num_elements, shift, block_histograms.data(), num_blocks);
-            });
-#endif
-
         // Step 2: Global prefix scan across bins and blocks
         uint32_t running_sum = 0;
         for (uint32_t bin = 0; bin < RADIX_BINS; ++bin) {
@@ -55,40 +46,38 @@ void launch_radix_sort(
             }
         }
 
-        // Step 3: Scatter to output buffer
-#if defined(ONYX_HAS_CUDA) && ONYX_HAS_CUDA == 1
-        // Launch native CUDA scatter
-#else
-        cuda::SimtEngine::instance().launch(
-            cuda::Dim3(num_blocks), cuda::Dim3(256), 0,
-            [&]() {
-                radix_sort_scatter<KeyType, ValueType>(
-                    in_k, in_v, out_k, out_v, num_elements, shift, global_offsets.data(), num_blocks);
-            });
-#endif
-
         // Swap ping-pong buffers
         std::swap(in_k, out_k);
         std::swap(in_v, out_v);
     }
 
-    // If result ended up in temp buffer, copy back
     if (in_k != keys) {
         std::memcpy(keys, in_k, num_elements * sizeof(KeyType));
         if (values) {
             std::memcpy(values, in_v, num_elements * sizeof(ValueType));
         }
     }
-
-    // Reverse if descending
-    if (!ascending) {
-        for (size_t i = 0; i < num_elements / 2; ++i) {
-            std::swap(keys[i], keys[num_elements - 1 - i]);
-            if (values) {
-                std::swap(values[i], values[num_elements - 1 - i]);
-            }
-        }
+#else
+    std::vector<size_t> indices(num_elements);
+    std::iota(indices.begin(), indices.end(), 0);
+    if (ascending) {
+        std::stable_sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
+            return keys[a] < keys[b];
+        });
+    } else {
+        std::stable_sort(indices.begin(), indices.end(), [&](size_t a, size_t b) {
+            return keys[a] > keys[b];
+        });
     }
+    std::vector<KeyType> sorted_keys(num_elements);
+    std::vector<ValueType> sorted_values(num_elements);
+    for (size_t i = 0; i < num_elements; ++i) {
+        sorted_keys[i] = keys[indices[i]];
+        if (values) sorted_values[i] = values[indices[i]];
+    }
+    std::memcpy(keys, sorted_keys.data(), num_elements * sizeof(KeyType));
+    if (values) std::memcpy(values, sorted_values.data(), num_elements * sizeof(ValueType));
+#endif
 }
 
 // Instantiations

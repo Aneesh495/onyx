@@ -61,7 +61,7 @@ ONYX_HOST_DEVICE ONYX_INLINE void filter_column_warp_vote(
 
     uint32_t lid = cuda::lane_id();
     uint32_t wid = cuda::warp_id();
-    uint32_t total_warps = bdim / 32;
+    [[maybe_unused]] uint32_t total_warps = bdim / 32;
 
     uint32_t stride = bdim * gdim;
     uint32_t base_row = bid * bdim + tid;

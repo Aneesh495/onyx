@@ -22,13 +22,22 @@ void launch_filter_column(
     uint32_t grid_size = std::min<uint32_t>((num_rows + block_size - 1) / block_size, 1024);
     // CUDA kernel launch
 #else
-    uint32_t block_size = 256;
-    uint32_t grid_size = std::min<uint32_t>((num_rows + block_size - 1) / block_size, 64);
-    cuda::SimtEngine::instance().launch(
-        cuda::Dim3(grid_size), cuda::Dim3(block_size), 0,
-        [&]() {
-            filter_column_warp_vote<T>(col_data, null_bitmap, num_rows, literal, op, out_row_ids, out_count);
-        });
+    uint32_t count = 0;
+    for (size_t i = 0; i < num_rows; ++i) {
+        bool is_null = (null_bitmap != nullptr) && !bit_utils::get_bit(null_bitmap, i);
+        bool is_match = false;
+        if (op == CompareOp::IsNull) {
+            is_match = is_null;
+        } else if (op == CompareOp::IsNotNull) {
+            is_match = !is_null;
+        } else if (!is_null) {
+            is_match = evaluate_predicate(col_data[i], literal, op);
+        }
+        if (is_match) {
+            out_row_ids[count++] = static_cast<uint32_t>(i);
+        }
+    }
+    *out_count = count;
 #endif
 }
 
