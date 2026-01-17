@@ -24,12 +24,18 @@ void launch_scalar_aggregate(
 
 #if defined(ONYX_HAS_CUDA) && ONYX_HAS_CUDA == 1
     // Native CUDA launch
+    uint32_t num_blocks = std::min<uint32_t>((num_rows + 255) / 256, 64);
 #else
-    cuda::SimtEngine::instance().launch(
-        cuda::Dim3(num_blocks), cuda::Dim3(256), 0,
-        [&]() {
-            scalar_aggregate_sum<T>(data, null_bitmap, num_rows, out_sum, out_count);
-        });
+    double sum = 0.0;
+    uint64_t count = 0;
+    for (size_t i = 0; i < num_rows; ++i) {
+        if (!null_bitmap || bit_utils::get_bit(null_bitmap, i)) {
+            sum += static_cast<double>(data[i]);
+            count++;
+        }
+    }
+    *out_sum = sum;
+    *out_count = count;
 #endif
 }
 
@@ -54,17 +60,33 @@ void launch_grouped_aggregate(
         slot.max_val = -1e30;
     }
 
-    uint32_t num_blocks = std::min<uint32_t>((num_rows + 255) / 256, 64);
-
 #if defined(ONYX_HAS_CUDA) && ONYX_HAS_CUDA == 1
     // Native CUDA launch
+    uint32_t num_blocks = std::min<uint32_t>((num_rows + 255) / 256, 64);
 #else
-    cuda::SimtEngine::instance().launch(
-        cuda::Dim3(num_blocks), cuda::Dim3(256), 0,
-        [&]() {
-            grouped_aggregate_hash<KeyType, ValType>(
-                group_keys, values, null_bitmap, num_rows, out_table.data(), table_capacity);
-        });
+    std::unordered_map<KeyType, size_t> key_map;
+    for (size_t i = 0; i < num_rows; ++i) {
+        if (null_bitmap && !bit_utils::get_bit(null_bitmap, i)) continue;
+        KeyType k = group_keys[i];
+        ValType v = values[i];
+        auto it = key_map.find(k);
+        size_t slot_idx = 0;
+        if (it == key_map.end()) {
+            slot_idx = key_map.size();
+            key_map[k] = slot_idx;
+            out_table[slot_idx].group_key = static_cast<uint64_t>(k);
+            out_table[slot_idx].sum = static_cast<double>(v);
+            out_table[slot_idx].count = 1;
+            out_table[slot_idx].min_val = static_cast<double>(v);
+            out_table[slot_idx].max_val = static_cast<double>(v);
+        } else {
+            slot_idx = it->second;
+            out_table[slot_idx].sum += static_cast<double>(v);
+            out_table[slot_idx].count += 1;
+            out_table[slot_idx].min_val = std::min(out_table[slot_idx].min_val, static_cast<double>(v));
+            out_table[slot_idx].max_val = std::max(out_table[slot_idx].max_val, static_cast<double>(v));
+        }
+    }
 #endif
 }
 
