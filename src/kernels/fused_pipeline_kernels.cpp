@@ -21,17 +21,22 @@ void launch_fused_filter_project_sum(
         return;
     }
 
-    uint32_t num_blocks = std::min<uint32_t>((num_rows + 255) / 256, 64);
-
 #if defined(ONYX_HAS_CUDA) && ONYX_HAS_CUDA == 1
     // Native CUDA
+    uint32_t num_blocks = std::min<uint32_t>((num_rows + 255) / 256, 64);
 #else
-    cuda::SimtEngine::instance().launch(
-        cuda::Dim3(num_blocks), cuda::Dim3(256), 0,
-        [&]() {
-            fused_filter_project_sum<KeyType, ValType>(
-                filter_col, filter_literal, filter_op, col_a, col_b, num_rows, out_sum, out_count);
-        });
+    double sum = 0.0;
+    uint64_t count = 0;
+    for (size_t i = 0; i < num_rows; ++i) {
+        if (evaluate_predicate(filter_col[i], filter_literal, filter_op)) {
+            double a = static_cast<double>(col_a[i]);
+            double b = col_b ? static_cast<double>(col_b[i]) : 1.0;
+            sum += (a * b);
+            count++;
+        }
+    }
+    *out_sum = sum;
+    *out_count = count;
 #endif
 }
 
@@ -39,5 +44,6 @@ void launch_fused_filter_project_sum(
 template void launch_fused_filter_project_sum<int32_t, double>(const int32_t*, int32_t, CompareOp, const double*, const double*, size_t, double*, uint64_t*, cudaStream_t);
 template void launch_fused_filter_project_sum<int64_t, double>(const int64_t*, int64_t, CompareOp, const double*, const double*, size_t, double*, uint64_t*, cudaStream_t);
 template void launch_fused_filter_project_sum<int32_t, int32_t>(const int32_t*, int32_t, CompareOp, const int32_t*, const int32_t*, size_t, double*, uint64_t*, cudaStream_t);
+template void launch_fused_filter_project_sum<double, double>(const double*, double, CompareOp, const double*, const double*, size_t, double*, uint64_t*, cudaStream_t);
 
 } // namespace onyx::kernels
