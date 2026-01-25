@@ -21,7 +21,6 @@ SimtEngine::~SimtEngine() = default;
 
 void* SimtEngine::allocate_device(size_t bytes) {
     if (bytes == 0) return nullptr;
-    // 128-byte aligned allocation to emulate GPU cache line alignment
     void* ptr = nullptr;
     int res = posix_memalign(&ptr, 128, bytes);
     if (res != 0) return nullptr;
@@ -51,24 +50,20 @@ void SimtEngine::memset_device(void* dst, int value, size_t bytes) {
 }
 
 void SimtEngine::synchronize() {
-    // In synchronous emulation, execution on host finishes before returning
 }
 
 void SimtEngine::launch(Dim3 grid_dim, Dim3 block_dim, [[maybe_unused]] size_t shared_mem_bytes,
                         const std::function<void()>& kernel_func) {
-    const uint32_t total_blocks = grid_dim.x * grid_dim.y * grid_dim.z;
     const uint32_t threads_per_block = block_dim.x * block_dim.y * block_dim.z;
     const uint32_t warps_per_block = (threads_per_block + 31) / 32;
 
     for (uint32_t bz = 0; bz < grid_dim.z; ++bz) {
         for (uint32_t by = 0; by < grid_dim.y; ++by) {
             for (uint32_t bx = 0; bx < grid_dim.x; ++bx) {
-                // Setup block context
                 g_simt_thread_ctx.grid_dim = grid_dim;
                 g_simt_thread_ctx.block_dim = block_dim;
                 g_simt_thread_ctx.block_idx = Dim3(bx, by, bz);
 
-                // Execute each warp in lockstep
                 for (uint32_t wid = 0; wid < warps_per_block; ++wid) {
                     g_simt_warp_ctx.warp_idx = wid;
 
@@ -90,6 +85,34 @@ void SimtEngine::launch(Dim3 grid_dim, Dim3 block_dim, [[maybe_unused]] size_t s
             }
         }
     }
+}
+
+void* simt_alloc_device(size_t bytes) {
+    return SimtEngine::instance().allocate_device(bytes);
+}
+
+void simt_free_device(void* ptr) {
+    SimtEngine::instance().free_device(ptr);
+}
+
+void simt_copy_h2d(void* dst, const void* src, size_t bytes) {
+    SimtEngine::instance().copy_h2d(dst, src, bytes);
+}
+
+void simt_copy_d2h(void* dst, const void* src, size_t bytes) {
+    SimtEngine::instance().copy_d2h(dst, src, bytes);
+}
+
+void simt_copy_d2d(void* dst, const void* src, size_t bytes) {
+    SimtEngine::instance().copy_d2d(dst, src, bytes);
+}
+
+void simt_memset(void* dst, int value, size_t bytes) {
+    SimtEngine::instance().memset_device(dst, value, bytes);
+}
+
+void simt_sync() {
+    SimtEngine::instance().synchronize();
 }
 
 #endif // !ONYX_HAS_CUDA

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "onyx/cuda/cuda_runtime_compat.hpp"
+#include "onyx/common/types.hpp"
 #include <cstdint>
 #include <cstddef>
 #include <atomic>

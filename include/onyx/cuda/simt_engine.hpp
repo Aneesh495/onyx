@@ -73,57 +73,6 @@ private:
     size_t num_workers_{4};
 };
 
-// Emulated CUDA runtime API bindings for CPU mode
-inline cudaError_t cudaMalloc(void** dev_ptr, size_t size) {
-    if (!dev_ptr) return cudaErrorInvalidValue;
-    *dev_ptr = SimtEngine::instance().allocate_device(size);
-    return *dev_ptr ? cudaSuccess : cudaErrorMemoryAllocation;
-}
-
-inline cudaError_t cudaFree(void* dev_ptr) {
-    SimtEngine::instance().free_device(dev_ptr);
-    return cudaSuccess;
-}
-
-inline cudaError_t cudaMemcpy(void* dst, const void* src, size_t count, cudaMemcpyKind kind) {
-    if (!dst || !src) return count == 0 ? cudaSuccess : cudaErrorInvalidValue;
-    switch (kind) {
-        case cudaMemcpyHostToDevice:
-            SimtEngine::instance().copy_h2d(dst, src, count);
-            break;
-        case cudaMemcpyDeviceToHost:
-            SimtEngine::instance().copy_d2h(dst, src, count);
-            break;
-        case cudaMemcpyDeviceToDevice:
-            SimtEngine::instance().copy_d2d(dst, src, count);
-            break;
-        case cudaMemcpyHostToHost:
-        case cudaMemcpyDefault:
-            std::memcpy(dst, src, count);
-            break;
-    }
-    return cudaSuccess;
-}
-
-inline cudaError_t cudaMemcpyAsync(void* dst, const void* src, size_t count, cudaMemcpyKind kind, [[maybe_unused]] cudaStream_t stream = nullptr) {
-    return cudaMemcpy(dst, src, count, kind);
-}
-
-inline cudaError_t cudaMemset(void* dev_ptr, int value, size_t count) {
-    if (!dev_ptr) return count == 0 ? cudaSuccess : cudaErrorInvalidValue;
-    SimtEngine::instance().memset_device(dev_ptr, value, count);
-    return cudaSuccess;
-}
-
-inline cudaError_t cudaMemsetAsync(void* dev_ptr, int value, size_t count, [[maybe_unused]] cudaStream_t stream = nullptr) {
-    return cudaMemset(dev_ptr, value, count);
-}
-
-inline cudaError_t cudaDeviceSynchronize() {
-    SimtEngine::instance().synchronize();
-    return cudaSuccess;
-}
-
 #endif // !ONYX_HAS_CUDA
 
 } // namespace onyx::cuda

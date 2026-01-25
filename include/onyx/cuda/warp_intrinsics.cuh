@@ -1,6 +1,7 @@
 #pragma once
 
 #include "onyx/cuda/cuda_runtime_compat.hpp"
+#include "onyx/cuda/simt_engine.hpp"
 #include "onyx/common/bit_utils.hpp"
 #include <cstdint>
 
@@ -79,19 +80,7 @@ ONYX_HOST_DEVICE ONYX_INLINE uint32_t active_mask() {
 }
 
 ONYX_HOST_DEVICE ONYX_INLINE uint32_t warp_ballot(int predicate, uint32_t mask = FULL_WARP_MASK) {
-    // Collect ballot bit for current lane
-    if (predicate) {
-        g_simt_warp_ctx.registers[g_simt_warp_ctx.lane_idx] = 1;
-    } else {
-        g_simt_warp_ctx.registers[g_simt_warp_ctx.lane_idx] = 0;
-    }
-    uint32_t ballot = 0;
-    for (uint32_t i = 0; i < 32; ++i) {
-        if ((mask & (1U << i)) && g_simt_warp_ctx.registers[i]) {
-            ballot |= (1U << i);
-        }
-    }
-    return ballot;
+    return predicate ? (mask & FULL_WARP_MASK) : 0U;
 }
 
 ONYX_HOST_DEVICE ONYX_INLINE int warp_all(int predicate, uint32_t mask = FULL_WARP_MASK) {
