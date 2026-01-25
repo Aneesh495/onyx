@@ -1,9 +1,5 @@
 #include "onyx/execution/operator.hpp"
-#include "onyx/kernels/filter.cuh"
-#include "onyx/kernels/radix_sort.cuh"
-#include "onyx/kernels/hash_join.cuh"
-#include "onyx/kernels/aggregate.cuh"
-#include "onyx/kernels/fused_pipeline.cuh"
+#include "onyx/kernels/kernel_launchers.hpp"
 #include "onyx/common/error.hpp"
 #include <chrono>
 
@@ -389,21 +385,34 @@ std::shared_ptr<storage::ColumnBatch> FusedPipelineExecutor::next(ExecutionConte
         auto col_a = batch->column(plan_->col_a());
         auto col_b = plan_->col_b().empty() ? nullptr : batch->column(plan_->col_b());
 
-        if (filter_col && col_a && filter_col->type().id == TypeId::INT32) {
+        if (filter_col && col_a) {
             double batch_sum = 0.0;
             uint64_t batch_count = 0;
             const double* b_ptr = col_b ? col_b->data<double>() : nullptr;
 
-            kernels::launch_fused_filter_project_sum<int32_t, double>(
-                filter_col->data<int32_t>(),
-                static_cast<int32_t>(plan_->filter_literal().as_int64()),
-                plan_->filter_op(),
-                col_a->data<double>(),
-                b_ptr,
-                batch->num_rows(),
-                &batch_sum,
-                &batch_count,
-                ctx.stream());
+            if (filter_col->type().id == TypeId::INT32) {
+                kernels::launch_fused_filter_project_sum<int32_t, double>(
+                    filter_col->data<int32_t>(),
+                    static_cast<int32_t>(plan_->filter_literal().as_int64()),
+                    plan_->filter_op(),
+                    col_a->data<double>(),
+                    b_ptr,
+                    batch->num_rows(),
+                    &batch_sum,
+                    &batch_count,
+                    ctx.stream());
+            } else if (filter_col->type().id == TypeId::FLOAT64) {
+                kernels::launch_fused_filter_project_sum<double, double>(
+                    filter_col->data<double>(),
+                    plan_->filter_literal().as_double(),
+                    plan_->filter_op(),
+                    col_a->data<double>(),
+                    b_ptr,
+                    batch->num_rows(),
+                    &batch_sum,
+                    &batch_count,
+                    ctx.stream());
+            }
 
             total_sum += batch_sum;
             total_count += batch_count;

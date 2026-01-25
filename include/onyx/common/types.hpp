@@ -110,8 +110,7 @@ public:
         float,
         double,
         bool,
-        std::string,
-        int64_t // Timestamp in microseconds
+        std::string
     >;
 
     ScalarValue() : type_(TypeId::INVALID), is_null_(true), storage_(std::monostate{}) {}

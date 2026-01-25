@@ -1,6 +1,7 @@
 #pragma once
 
 #include "onyx/planner/logical_plan.hpp"
+#include "onyx/kernels/filter.cuh"
 #include <string>
 #include <vector>
 #include <memory>

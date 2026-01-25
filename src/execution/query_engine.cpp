@@ -3,6 +3,7 @@
 #include "onyx/planner/optimizer.hpp"
 #include "onyx/execution/pipeline_executor.hpp"
 #include "onyx/common/logger.hpp"
+#include "onyx/common/error.hpp"
 #include <sstream>
 #include <chrono>
 
