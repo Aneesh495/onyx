@@ -7,5 +7,8 @@ from .client import OnyxClient
 from .dataframe import OnyxDataFrame
 from .types import DataType
 
+DataFrame = OnyxDataFrame
+Client = OnyxClient
+
 __version__ = "0.1.0"
-__all__ = ["OnyxClient", "OnyxDataFrame", "DataType"]
+__all__ = ["OnyxClient", "OnyxDataFrame", "DataType", "DataFrame", "Client"]
