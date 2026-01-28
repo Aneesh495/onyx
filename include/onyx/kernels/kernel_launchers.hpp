@@ -135,4 +135,13 @@ void launch_fused_filter_project_sum(
     uint64_t* out_count,
     cudaStream_t stream = nullptr);
 
+template <typename T>
+void launch_dictionary_decode(
+    const uint32_t* encoded_codes,
+    const T* dictionary_entries,
+    size_t num_dict_entries,
+    size_t num_rows,
+    T* out_decoded,
+    cudaStream_t stream = nullptr);
+
 } // namespace onyx::kernels

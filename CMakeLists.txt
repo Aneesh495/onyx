@@ -109,6 +109,7 @@ if(ONYX_HAS_CUDA)
         src/kernels/compression_kernels.cu
         src/kernels/string_kernels.cu
         src/kernels/fused_pipeline_kernels.cu
+        src/kernels/dictionary_kernels.cu
     )
 else()
     set(ONYX_KERNEL_SOURCES
@@ -120,6 +121,7 @@ else()
         src/kernels/compression_kernels.cpp
         src/kernels/string_kernels.cpp
         src/kernels/fused_pipeline_kernels.cpp
+        src/kernels/dictionary_kernels.cpp
     )
 endif()
 
