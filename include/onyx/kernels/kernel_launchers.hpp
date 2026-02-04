@@ -7,7 +7,15 @@
 #include <cstdint>
 #include <vector>
 
+#include "onyx/kernels/multi_radix_sort.cuh"
+
 namespace onyx::kernels {
+
+void launch_multi_column_sort(
+    const std::vector<SortKeyDescriptor>& keys,
+    size_t num_rows,
+    uint32_t* out_row_ids,
+    cudaStream_t stream = nullptr);
 
 template <typename T>
 void launch_filter_column(
