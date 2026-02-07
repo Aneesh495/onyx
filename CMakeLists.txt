@@ -111,6 +111,7 @@ if(ONYX_HAS_CUDA)
         src/kernels/fused_pipeline_kernels.cu
         src/kernels/dictionary_kernels.cu
         src/kernels/multi_radix_sort_kernels.cu
+        src/kernels/rolling_window_kernels.cu
     )
 else()
     set(ONYX_KERNEL_SOURCES
@@ -124,6 +125,7 @@ else()
         src/kernels/fused_pipeline_kernels.cpp
         src/kernels/dictionary_kernels.cpp
         src/kernels/multi_radix_sort_kernels.cpp
+        src/kernels/rolling_window_kernels.cpp
     )
 endif()
 

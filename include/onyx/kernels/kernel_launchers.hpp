@@ -152,4 +152,12 @@ void launch_dictionary_decode(
     T* out_decoded,
     cudaStream_t stream = nullptr);
 
+template <typename T>
+void launch_exponential_moving_average(
+    const T* in_data,
+    size_t num_rows,
+    double alpha,
+    double* out_ema,
+    cudaStream_t stream = nullptr);
+
 } // namespace onyx::kernels
