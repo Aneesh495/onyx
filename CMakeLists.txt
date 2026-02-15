@@ -70,6 +70,7 @@ set(ONYX_STORAGE_SOURCES
     src/storage/table.cpp
     src/storage/catalog.cpp
     src/storage/stream_ingestor.cpp
+    src/storage/arrow_adapter.cpp
 )
 
 set(ONYX_SQL_SOURCES
