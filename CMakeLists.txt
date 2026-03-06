@@ -85,6 +85,7 @@ set(ONYX_PLANNER_SOURCES
     src/planner/physical_plan.cpp
     src/planner/optimizer.cpp
     src/planner/cost_model.cpp
+    src/planner/plan_visualizer.cpp
 )
 
 set(ONYX_EXECUTION_SOURCES
