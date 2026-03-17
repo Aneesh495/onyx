@@ -98,6 +98,7 @@ set(ONYX_EXECUTION_SOURCES
 set(ONYX_SERVER_SOURCES
     src/server/http_server.cpp
     src/server/telemetry.cpp
+    src/server/json_serializer.cpp
 )
 
 # Kernels
