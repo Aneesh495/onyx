@@ -54,6 +54,7 @@ set(ONYX_COMMON_SOURCES
     src/common/types.cpp
     src/common/error.cpp
     src/common/logger.cpp
+    src/common/date_utils.cpp
 )
 
 set(ONYX_CUDA_SOURCES
