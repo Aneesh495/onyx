@@ -151,6 +151,7 @@ target_include_directories(onyx_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # CLI Binary
 add_executable(onyx-cli
     src/cli/repl.cpp
+    src/cli/explain.cpp
     src/cli/main.cpp
 )
 target_link_libraries(onyx-cli PRIVATE onyx_core)

@@ -1,4 +1,5 @@
 #include "onyx/cli/repl.hpp"
+#include "onyx/cli/explain.hpp"
 #include "onyx/storage/table.hpp"
 #include <iostream>
 
@@ -25,6 +26,9 @@ int main(int argc, char** argv) {
         if ((arg == "--exec" || arg == "-e") && i + 1 < argc) {
             repl.execute_single_query(argv[++i]);
             return 0;
+        } else if (arg == "--explain" && i + 1 < argc) {
+            std::cout << onyx::cli::QueryExplainer::explain_query(argv[++i], true) << "\n";
+            return 0;
         } else if (arg == "--load" && i + 2 < argc) {
             std::string path = argv[++i];
             std::string tbl = argv[++i];
@@ -32,6 +36,7 @@ int main(int argc, char** argv) {
         } else if (arg == "--help" || arg == "-h") {
             std::cout << "Usage: onyx-cli [OPTIONS]\n"
                       << "  -e, --exec <query>   Execute single query and exit\n"
+                      << "  --explain <query>    Explain query execution plan\n"
                       << "  --load <file> <tbl>  Load CSV file before starting\n"
                       << "  --help               Display this help message\n";
             return 0;
