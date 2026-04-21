@@ -1,5 +1,8 @@
 import { renderDAG } from "./dag_renderer.js";
 import { updateMemoryGauge } from "./charts.js";
+import { OnyxStreamClient } from "./streaming_client.js";
+
+const streamClient = new OnyxStreamClient();
 
 async function fetchMetrics() {
   try {
@@ -78,5 +81,17 @@ window.addEventListener("DOMContentLoaded", () => {
 
   fetchMetrics();
   fetchTables();
-  setInterval(fetchMetrics, 2000);
+
+  streamClient.subscribe((data) => {
+    if (data.gpu_memory) {
+      updateMemoryGauge(
+        "mem-bar",
+        data.gpu_memory.active_bytes,
+        data.gpu_memory.reserved_bytes
+      );
+      document.getElementById("stat-allocs").textContent = data.gpu_memory.total_allocations;
+      document.getElementById("stat-frag").textContent = (data.gpu_memory.fragmentation_ratio * 100).toFixed(1) + "%";
+    }
+  });
+  streamClient.connect();
 });

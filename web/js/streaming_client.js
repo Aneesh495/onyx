@@ -3,7 +3,7 @@
  * Connects to Onyx telemetry WebSocket / SSE streams and renders real-time throughput.
  */
 
-class OnyxStreamClient {
+export class OnyxStreamClient {
     constructor(host = "localhost", port = 9090) {
         this.host = host;
         this.port = port;
@@ -58,4 +58,6 @@ class OnyxStreamClient {
     }
 }
 
-window.OnyxStreamClient = OnyxStreamClient;
+if (typeof window !== "undefined") {
+    window.OnyxStreamClient = OnyxStreamClient;
+}
