@@ -110,6 +110,33 @@ PhysicalFusedPipeline [Fused Scan-Filter-Project-Sum, Zero HBM Round-Trips]: tab
 - [Embedded HTTP Telemetry Server](src/server/http_server.hpp): Zero-dependency REST API and Prometheus-compatible metrics endpoint.
 - [Python Client SDK](python/onyx/client.py): Pythonic client and lazy DataFrame API.
 
+## Python SDK Integration
+
+Onyx includes a zero-overhead Python client and DataFrame interface:
+
+```python
+import onyx
+
+# Connect to embedded Onyx server or local IPC socket
+client = onyx.connect(host="localhost", port=9090)
+
+# Register tables or stream Arrow record batches
+df = client.table("telemetry")
+
+# Fluent relational expressions compiled to GPU DAG
+result = (
+    df.filter(df["latency_us"] > 1000)
+      .select(["service_id", "latency_us", "status_code"])
+      .group_by(["service_id"])
+      .agg({"latency_us": "avg", "status_code": "count"})
+      .sort("avg_latency_us", ascending=False)
+      .limit(10)
+      .execute()
+)
+
+print(result.to_pandas())
+```
+
 ## Performance Benchmarks
 
 Measured on synthetic datasets with Release compilation flags (`-O3 -march=native`):
@@ -124,15 +151,21 @@ Measured on synthetic datasets with Release compilation flags (`-O3 -march=nativ
 
 See [docs/BENCHMARKS.md](docs/BENCHMARKS.md) for detailed performance specifications.
 
-## Documentation
+## Deep-Dive Technical Monographs
 
-- [System Architecture](docs/ARCHITECTURE.md)
-- [CUDA Kernel Implementations](docs/CUDA_KERNELS.md)
-- [CPU SIMT Emulation Layer](docs/SIMT_EMULATION.md)
-- [Physical Storage Layout](docs/STORAGE_LAYOUT.md)
-- [Query Planner & Optimizer](docs/QUERY_PLANNER.md)
-- [Performance Benchmarks](docs/BENCHMARKS.md)
-- [Bug Ledger & Postmortem](docs/BUG_LEDGER.md)
+- [System Architecture](docs/ARCHITECTURE.md): End-to-end subsystem orchestration, memory layout, and concurrency model.
+- [CUDA Kernel Implementations](docs/CUDA_KERNELS.md): Warp-level shuffle algorithms, cooperative thread arrays, and register allocation.
+- [CPU SIMT Emulation Layer](docs/SIMT_EMULATION.md): Hardware-accurate warp scheduler, divergence stack, and lane intrinsics in C++23.
+- [SIMT vs SIMD Architectural Analysis](docs/SIMT_VS_SIMD.md): Comparative analysis of warp divergence, lockstep execution, and register allocation.
+- [Robin Hood Hashing Deep-Dive](docs/ROBIN_HOOD_HASHING.md): Linear probing variance minimization, PSL displacement bounds, and GPU warp cooperative lookup.
+- [Pipeline Fusion & JIT Compilation](docs/PIPELINE_FUSION_COMPILER.md): Multi-operator register preservation and intermediate memory traffic elimination.
+- [Cache Hierarchy & Hardware Locality](docs/CACHE_HIERARCHY.md): L1 texture cache, L2 cache line partitioning, and NUMA-aware pinned ring buffer streaming.
+- [Physical Storage Layout](docs/STORAGE_LAYOUT.md): Columnar batch format, Arrow C Data Interface integration, and compression formats.
+- [Query Planner & Optimizer](docs/QUERY_PLANNER.md): Cost model, rule-based rewriting, and operator fusion DAG transformations.
+- [Performance Benchmarks](docs/BENCHMARKS.md): Micro-benchmarks and TPC-H analytical suite results.
+- [Building and Verification Guide](docs/BUILDING.md): Build targets, CMake options, and test suite execution.
+- [Contribution and Kernel Standards](docs/CONTRIBUTING.md): SIMT parity verification, coding conventions, and memory rules.
+- [Bug Ledger & Postmortem](docs/BUG_LEDGER.md): Documented edge cases, memory alignment fixes, and regression test suites.
 
 ## License
 
