@@ -1,4 +1,4 @@
-.PHONY: all build test bench cli server clean format lint demo check-cuda
+.PHONY: all build test test-python test-all bench cli server clean format lint demo check-cuda
 
 BUILD_DIR ?= build
 BUILD_TYPE ?= Release
@@ -15,6 +15,12 @@ build: $(BUILD_DIR)/CMakeCache.txt
 test: build
 	@echo "Running Onyx Test Suite..."
 	@./$(BUILD_DIR)/onyx-tests
+
+test-python:
+	@echo "Running Onyx Python Test Suite..."
+	@PYTHONPATH=python python3 -m unittest discover -s python/tests
+
+test-all: test test-python
 
 bench: build
 	@echo "Running Onyx Performance Benchmarks..."
